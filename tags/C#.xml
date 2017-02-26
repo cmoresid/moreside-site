@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <channel>
+        <title>A Developer's Musings - Posts tagged C#</title>
+        <link>http://moresi.de</link>
+        <description><![CDATA[Personal blog for Connor Moreside]]></description>
+        <atom:link href="http://moresi.de/tags/C%23.xml" rel="self"
+                   type="application/rss+xml" />
+        <lastBuildDate>Sun, 26 Feb 2017 00:00:00 UT</lastBuildDate>
+        <item>
+    <title>Creating A Drag-n-Drop Enabled Text Box in WPF</title>
+    <link>http://moresi.de/posts/2017-02-26-drag-n-drop-text-field-wpf.html</link>
+    <description><![CDATA[<p>Recently, a WPF desktop application that I was working on required the user to select multiple files, which were typically in different directories. I had implemented a “Browse” button that would allow the user to select these files via a file selection dialog box . However, this becomes very tedious when you are constantly selecting these different files. I decided to implement drag-n-drop to make my users’ lives easier.</p>
+<p>There are a few different approaches that you can take. You can use a framework, such as the wonderful “GongSolutions.WPF.DragDrop” library. This library is great if you require more advanced drag-n-drop functionality. I was originally using this library to implement the functionality that I needed, but later realized it was overkill. I decided to go with a different approach. I decided to create a custom control that derived from the <code>TextBox</code> control.</p>
+<p>First, you will need to override the <code>OnApplyTemplate</code> method of the <code>TextBox</code> control. <code>OnApplyTemplate</code> is called just before the UI element is displayed in the application. This is a good place to wire the drag/drop related events:</p>
+<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">public</span> <span class="kw">override</span> <span class="dt">void</span> <span class="fu">OnApplyTemplate</span>()
+{
+    <span class="co">// Make sure to call the base.OnApplyTemplate() first!</span>
+    <span class="kw">base</span>.<span class="fu">OnApplyTemplate</span>();
+
+    DragEnter += FilePathTextBox_DragEnter;
+    Drop += FilePathTextBox_Drop;
+    PreviewDragOver += FilePathTextBox_PreviewDragOver;
+}</code></pre></div>
+<p>We will now start implementing the event handlers that we specified in the <code>OnApplyTemplate</code> method. Let’s start with the easy one first: <code>FilePathTextBox_PreviewDragOver</code>. This handler tells the control to show the user the little ‘+’ sign when he / she drags a file onto the text box:</p>
+<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">private</span> <span class="dt">void</span> <span class="fu">FilePathTextBox_PreviewDragOver</span>(<span class="dt">object</span> sender, DragEventArgs e)
+{
+    e.<span class="fu">Handled</span> = <span class="kw">true</span>;
+}</code></pre></div>
+<p>Now, let’s write the event handler that handles the event when the user drags a file on to the custom text box:</p>
+<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">private</span> <span class="dt">void</span> <span class="fu">FilePathTextBox_DragEnter</span>(<span class="dt">object</span> sender, DragEventArgs e)
+{
+    var dragFileList = ((DataObject)e.<span class="fu">Data</span>).<span class="fu">GetFileDropList</span>().<span class="fu">Cast</span>&lt;<span class="dt">string</span>&gt;().<span class="fu">ToList</span>();
+    <span class="dt">var</span> draggingOnlyOneFile = dragFileList.<span class="fu">Count</span> == <span class="dv">1</span> &amp;&amp; dragFileList.<span class="fu">All</span>(item =&gt;
+    {
+        <span class="dt">var</span> attributes = File.<span class="fu">GetAttributes</span>(item);
+        <span class="kw">return</span> (attributes &amp; FileAttributes.<span class="fu">Directory</span>) != FileAttributes.<span class="fu">Directory</span>;
+    });
+
+    e.<span class="fu">Effects</span> = draggingOnlyOneFile ? DragDropEffects.<span class="fu">Copy</span> : DragDropEffects.<span class="fu">None</span>;
+}</code></pre></div>
+<p>The <code>FilePathTextBox_DragEnter</code> event handler gets a list of files that the user dragged on to the text box. In the code above, we want the user to only be able to drag 1 file (not directory) on to the text box. This filtering can be tailored to your needs. This is left as an exercise to the reader.</p>
+<p>Here is the last event that we need to implement:</p>
+<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">private</span> <span class="dt">void</span> <span class="fu">FilePathTextBox_Drop</span>(<span class="dt">object</span> sender, DragEventArgs e)
+{
+    var dragFileList = ((DataObject)e.<span class="fu">Data</span>).<span class="fu">GetFileDropList</span>().<span class="fu">Cast</span>&lt;<span class="dt">string</span>&gt;().<span class="fu">ToList</span>();
+    <span class="dt">var</span> draggingOnlyOneFile = dragFileList.<span class="fu">Count</span> == <span class="dv">1</span> &amp;&amp; dragFileList.<span class="fu">All</span>(item =&gt;
+    {
+        <span class="dt">var</span> attributes = File.<span class="fu">GetAttributes</span>(item);
+        <span class="kw">return</span> (attributes &amp; FileAttributes.<span class="fu">Directory</span>) != FileAttributes.<span class="fu">Directory</span>;
+    });
+
+    e.<span class="fu">Effects</span> = draggingOnlyOneFile ? DragDropEffects.<span class="fu">Copy</span> : DragDropEffects.<span class="fu">None</span>;
+
+    <span class="co">// Set the Text property of the custom text box to the path of</span>
+    <span class="co">// the file the user dropped.</span>
+    <span class="kw">if</span> (draggingOnlyOneFile)
+        Text = dragFileList[<span class="dv">0</span>];
+}</code></pre></div>
+<p>Here is the final, refactored implementation:</p>
+<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs">pubic <span class="kw">class</span> FilePathTextBox : TextBox
+{
+    <span class="kw">public</span> <span class="kw">override</span> <span class="dt">void</span> <span class="fu">OnApplyTemplate</span>()
+    {
+        <span class="kw">base</span>.<span class="fu">OnApplyTemplate</span>();
+        DragEnter += FilePathTextBox_DragEnter;
+        Drop += FilePathTextBox_Drop;
+        PreviewDragOver += FilePathTextBox_PreviewDragOver;
+    }
+
+    <span class="kw">private</span> <span class="dt">void</span> <span class="fu">FilePathTextBox_PreviewDragOver</span>(<span class="dt">object</span> sender, DragEventArgs e)
+    {
+        e.<span class="fu">Handled</span> = <span class="kw">true</span>;
+    }
+
+    <span class="kw">private</span> <span class="dt">void</span> <span class="fu">FilePathTextBox_DragEnter</span>(<span class="dt">object</span> sender, DragEventArgs e)
+    {
+        <span class="dt">var</span> didUserOnlyDragOneFile = <span class="fu">DidUserDragOnlyOneFile</span>(e);
+        <span class="fu">SetDragDropEffect</span>(didUserOnlyDragOneFile, e);
+    }
+
+    <span class="kw">private</span> <span class="dt">void</span> <span class="fu">FilePathTextBox_Drop</span>(<span class="dt">object</span> sender, DragEventArgs e)
+    {
+        <span class="dt">var</span> didUserOnlyDragOneFile = <span class="fu">DidUserDragOnlyOneFile</span>(e);
+        <span class="fu">SetDragDropEffect</span>(didUserOnlyDragOneFile, e);
+
+        <span class="kw">if</span> (draggingOnlyOneFile)
+            Text = dragFileList[<span class="dv">0</span>];
+    }
+
+    <span class="kw">private</span> <span class="dt">bool</span> <span class="fu">DidUserDragOnlyOneFile</span>(DragEventArgs e)
+    {
+        var dragFileList = ((DataObject)e.<span class="fu">Data</span>).<span class="fu">GetFileDropList</span>().<span class="fu">Cast</span>&lt;<span class="dt">string</span>&gt;().<span class="fu">ToList</span>();
+        <span class="dt">var</span> draggingOnlyOneFile = dragFileList.<span class="fu">Count</span> == <span class="dv">1</span> &amp;&amp; dragFileList.<span class="fu">All</span>(item =&gt;
+        {
+            <span class="dt">var</span> attributes = File.<span class="fu">GetAttributes</span>(item);
+            <span class="kw">return</span> (attributes &amp; FileAttributes.<span class="fu">Directory</span>) != FileAttributes.<span class="fu">Directory</span>;
+        });
+
+        <span class="kw">return</span> draggingOnlyOneFile;
+    }
+
+    <span class="kw">private</span> <span class="dt">void</span> <span class="fu">SetDragDropEffect</span>(<span class="dt">bool</span> shouldShowCopyEffect, DragEventArgs e)
+    {
+        e.<span class="fu">Effects</span> = shouldShowCopyEffect ? DragDropEffects.<span class="fu">Copy</span> : DragDropEffects.<span class="fu">None</span>;
+    }
+}</code></pre></div>
+<p>Cheers,</p>
+<p>Connor Moreside</p>]]></description>
+    <pubDate>Sun, 26 Feb 2017 00:00:00 UT</pubDate>
+    <guid>http://moresi.de/posts/2017-02-26-drag-n-drop-text-field-wpf.html</guid>
+    <dc:creator>Connor Moreside</dc:creator>
+</item>
+
+    </channel>
+</rss>
