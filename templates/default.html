@@ -1,14 +1,200 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<!DOCTYPE html>
+<html lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <title>My Hakyll Blog - $title$</title>
-        <link rel="stylesheet" type="text/css" href="/css/default.css" />
+        <title>$title$</title>
+        <!--[if lte IE 8]>
+            <link rel="stylesheet" href="https://unpkg.com/purecss@0.6.2/build/base-min.css">
+            <link rel="stylesheet" href="https://unpkg.com/purecss@0.6.2/build/grids-min.css">
+            <link rel="stylesheet" href="https://unpkg.com/purecss@0.6.2/build/grids-responsive-old-ie-min.css">
+        <![endif]-->
+        <!--[if gt IE 8]><!-->
+            <link rel="stylesheet" href="https://unpkg.com/purecss@0.6.2/build/base-min.css">
+            <link rel="stylesheet" href="https://unpkg.com/purecss@0.6.2/build/grids-min.css">
+            <link rel="stylesheet" href="https://unpkg.com/purecss@0.6.2/build/grids-responsive-min.css">
+        <!--<![endif]-->
+        <link href="https://fonts.googleapis.com/css?family=PT+Sans|VT323" rel="stylesheet">
+        <style type="text/css">
+            html, button, input, select, textarea, .pure-g[class *= "pure-u"] {
+                font-family: 'PT Sans', sans-serif;
+                font-size: 16px;
+            }
+
+            h1 {
+                font-size: 18px;
+            }
+
+            nav {
+                font-size: 18px;
+                text-align: right;
+                white-space: nowrap;
+            }
+
+            footer {
+                white-space: nowrap;
+                text-align: right;
+                padding-right: 50px;
+            }
+
+            @media (max-width: 320px) {
+                nav {
+                    font-size: 12px;
+                }
+            }
+
+            @media (max-width: 1024px) {
+                nav {
+                    margin-top: 20px;
+                    margin-right: 0;
+                    text-align: center;
+                    padding: 0px;
+                    font-size: 14px;
+                }
+
+                nav > ul {
+                    padding-right: 0px;
+                }
+
+                footer {
+                    white-space: nowrap;
+                    text-align: center;
+                }
+
+                #header-text {
+                    margin-top: 10px;
+                    text-align: center;
+                    font-size: 24px;
+                }
+
+                #body-container {
+                    margin-top: 50px;
+                }
+            }
+
+            @media (max-width: 568px) {
+                #body-container {
+                    padding-top: 100px;
+                    margin-left: 5%;
+                    margin-right: 5%;
+                }
+            }
+
+            nav > ul {
+                list-style-type: none;
+                margin: 0;
+                padding-right: 50px;
+            }
+
+            nav > ul > li {
+                display: inline-block;
+                padding-left: 5px;
+            }
+
+            nav > ul > li a {
+                display: block;
+                color: black;
+                text-decoration: none;
+            }
+
+            nav > ul > li a:hover {
+                text-decoration: underline;
+            }
+
+            .img-link {
+                text-decoration: none;
+            }
+
+            #container {
+                margin-top: 20px;
+            }
+
+            #header-bar {
+                height: 20px;
+                background-color: #6B6B6B;
+                box-shadow: 0 0.5px 3px 0 #000000;
+            }
+
+            #header-contents {
+                height: 100px;
+                display: flex;
+                align-items: center;
+            }
+
+            #header-text {
+                font-family: 'VT323', monospace;
+                font-size: 52px;
+            }
+        
+            #avatar {
+                height: 80px;
+                width: 80px;
+                display: block;
+                margin: auto;
+            }
+        </style>
     </head>
     <body>
-        <div id="header">
+        <div id="header-bar"></div>
+        <div id="container">
+            <header>
+                <div id="header-contents" class="pure-g">
+                    <div class="pure-u-1 pure-u-md-3-24">
+                        <a href="/">
+                            <img id="avatar" src="/images/avatar.png" alt="avatar" />
+                        </a>
+                    </div>
+                    <div id="header-text" class="pure-u-1 pure-u-md-13-24">
+                        Musings Of A Developer
+                    </div>
+                    <nav class="pure-u-1 pure-u-md-8-24">
+                        <ul>
+                            <li><a href="#">Home</a></li>
+                            <li>|</li>
+                            <li><a href="#">Posts</a></li>
+                            <li>|</li>
+                            <li><a href="#">Projects</a></li>
+                            <li>|</li>
+                            <li><a href="#">CV</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </header>
+            <div id="body-container" class="pure-g">
+                <div class="pure-u-md-3-24"></div>
+                <div class="pure-u-1 pure-u-md-13-24">
+                    <h1>About Me</h1>
+                    <p>
+                        sdfsldfjsdl jsldfj sldkfj sldkfj sldkfj sdf sdf sdf jsdlfk jls kdjflsdjf lj sdfl lskdjf lskdjf lsdkjf lsdkfj sldkfjsldkfjsldkfj sdlfkj sldkfj sldkfj sldkfj sldkfj sldkfj 
+                    </p>
+                </div>
+                <div class="pure-u-md-8-24"></div>
+            </div>
+            <footer>
+                <div class="pure-g">
+                    <div class="pure-u-md-3-24"></div>
+                    <div class="pure-u-1 pure-u-md-13-24">
+                    </div>
+                    <div id="profile-container" class="pure-u-md-8-24">
+                        <a class="img-link" href="https://www.linkedin.com/in/cmoreside">
+                            <img src="/images/linkedin.png" alt="LinkedIn Profile" />
+                        </a>
+                        <a class="img-link" href="https://github.com/cmoresid">
+                            <img src="/images/github.png" alt="GitHub Profile" />
+                        </a>
+                        <a class="img-link" href="https://twitter.com/c_moreside">
+                            <img src="/images/twitter.png" alt="Twitter Profile" />
+                        </a>
+                        <a class="img-link" href="/feed.xml">
+                            <img src="/images/rss.png" alt="RSS Feed" />
+                        </a>
+                    </div>
+            </div>
+            </footer>
+        </div>
+        
+
+        <!--<div id="header">
             <div id="logo">
                 <a href="/">My Hakyll Blog</a>
             </div>
@@ -28,6 +214,6 @@
         <div id="footer">
             Site proudly generated by
             <a href="http://jaspervdj.be/hakyll">Hakyll</a>
-        </div>
+        </div>-->
     </body>
 </html>
