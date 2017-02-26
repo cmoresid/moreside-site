@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <channel>
+        <title>A Developer's Musings - Posts tagged R</title>
+        <link>http://moresi.de</link>
+        <description><![CDATA[Personal blog for Connor Moreside]]></description>
+        <atom:link href="http://moresi.de/tags/R.xml" rel="self"
+                   type="application/rss+xml" />
+        <lastBuildDate>Sat, 02 Apr 2016 00:00:00 UT</lastBuildDate>
+        <item>
+    <title>Setting Up R Studio Server On Microsoft Azure</title>
+    <link>http://moresi.de/posts/2016-04-02-setting-up-r-studio-server-on-microsoft-azure.html</link>
+    <description><![CDATA[<h2 id="overview">Overview</h2>
+<p>This article will discuss why you would want to setup R Studio Server and how to perform the installation of R Studio Server on a Microsoft Azure VM:</p>
+<ol style="list-style-type: decimal">
+<li>Introduction<br />
+</li>
+<li>Creating a Virtual Machine in Microsoft Azure<br />
+</li>
+<li>Installing R<br />
+</li>
+<li>Installing R Studio Server</li>
+</ol>
+<p>This article assumes that you already have a Microsoft Azure subscription. If not, you can sign up for a <a href="https://azure.microsoft.com/en-us/free/">trial</a> so you can follow along.</p>
+<h2 id="introduction">Introduction</h2>
+<p>R is a powerful language for performing data analysis. There are many different tools that allow one to create and execute R scripts. You can write R programs directly in the R console, or you can use a more full featured tool such as <a href="https://www.rstudio.com/">R Studio</a> or the newly released <a href="https://www.visualstudio.com/en-us/features/rtvs-vs.aspx">R Tools for Visual Studio</a>.</p>
+<p>R Studio is a fantastic IDE for developing R scripts. It allows you to manage your R scripts, install packages, view visualizations, and much, much more. R Studio Server is essentially the R Studio IDE in the cloud. It allows you to access your data analysis environment from any desktop computer, tablet, or phone!</p>
+<p>However, the greatest advantage of using R Studio Server is having the ability to install it on a powerful VM where you can perform much more memory and CPU intense analyses without fear of bogging down your local system.</p>
+<p>One of the disadvantages of installing on an Azure VM is cost. Depending on the size of the VM you pick, it can become quite costly. One way to mitigate cost is to turn off the VM when you are not using it. You will not be charged when the VM is shutdown.</p>
+<p>Still sound like a good idea? Awesome! Let’s begin!</p>
+<h2 id="create-virtual-machine">Create Virtual Machine</h2>
+<p>Begin by logging into the Microsoft Azure portal. In the left-side bar, click the Virtual Machines link:</p>
+<div class="figure">
+<img src="/images/2016-04-02-VMCreationScreen.png" alt="VM Creation Screen #1" />
+<p class="caption">VM Creation Screen #1</p>
+</div>
+<p>Click the Add button to create a new VM. From here, you can select what VM image to use. We will be utilizing the “Ubuntu Server 14.04 LTS” image. Start typing “Ubuntu” into the search bar at the top. You should see the aforementioned image in the search results. Select this image to continue.</p>
+<div class="figure">
+<img src="/images/2016-04-02-CreateVM.png" alt="VM Creation Screen #2" />
+<p class="caption">VM Creation Screen #2</p>
+</div>
+<p>You will now be prompted to select a deployment model. We will just use the default. Click the “Create” button.</p>
+<div class="figure">
+<img src="/images/2016-04-02-ResourceManager.png" alt="VM Creation Screen #2" />
+<p class="caption">VM Creation Screen #2</p>
+</div>
+<p>It is now time to configure the VM. First, have to provide a name for the VM. I chose RStudio. You can pick any name that suits your fancy. Now, you will need to specify a user name. Enter “rstudioadmin”. There are two different authentication mechanisms you can use. The simplest is just using a plain old password. Alternatively, you can opt into using an SSH key to access your VM. In this article, we will just use a password. If you want to use an SSH key, you can click the SSH tab and copy and paste your public key into the text area.</p>
+<p>Select the subscription to associate the VM. Now choose which resource group to associate this VM with. We will create a new resource group for this VM. Enter “RServer” as the name of the resource group. Now choose the location where the VM will be located.</p>
+<div class="figure">
+<img src="/images/2016-04-02-SetupSSH.png" alt="VM Creation Screen #3" />
+<p class="caption">VM Creation Screen #3</p>
+</div>
+<p>Click “OK”.</p>
+<p>Now it is up to you to choose the size of the VM you would like to use. It will depend on the size of datasets you will be analyzing and what type of analysis you would like to perform on said datasets. It is usually in your best interests to have your dataset fit in main memory so you don’t have to worry about paging. Here is a good rule of thumb for estimating the size of your dataset in memory:</p>
+<pre><code>memory required = no. of column * no. of rows * 8 bytes/numeric</code></pre>
+<p>For example, if I had a dataset of with 4,000,000 rows and 130 columns, I would need approximately:</p>
+<pre><code>4,000,000 * 130 * 8 
+= 4,160,000,000 / 1073741824 
+~ 3.87 GB</code></pre>
+<p>You would need approximately 3.87 GB of memory to store this dataset in memory. Note that this estimation assumes that all the columns in the dataset are numeric. You will want to create a VM that has at least as much memory as the estimated size of the dataset you are analyzing. You also have to take into account the additional memory that the operating system and R Studio Server requires in order to run. Doubling the amount of memory should be more than sufficient.</p>
+<p>Depending on the type of analysis you are performing, you may need a significant more amount of memory. However, one of the beauties of using the Microsoft Azure platform is that you can easily scale your VM’s capabilities to fit your needs :)</p>
+<p>For this tutorial, we will be selecting DS11 Standard size, which includes 2 cores and 14 GB of memory.</p>
+<div class="figure">
+<img src="/images/2016-04-02-SelectVMSize.png" alt="VM Creation Screen #4" />
+<p class="caption">VM Creation Screen #4</p>
+</div>
+<p>Select the DS11 machine size and click the “Select” button.</p>
+<p>In the Settings section, we will just accept the defaults. Once on the summary page, click “OK” to begin the procurement of the VM.</p>
+<p>When the deployment of the VM has finished, we will now need to allow traffic on port 8787 through to the VM. First, click on the “Virtual machines” link in the sidebar. Click on the “RServer” virtual machine. Now click on the “Settings” button. This will open the “Settings” blade. Within the settings blade, click the “Network interfaces” link.</p>
+<div class="figure">
+<img src="/images/2016-04-02-SetupNetwork.png" alt="VM Creation Screen #5" />
+<p class="caption">VM Creation Screen #5</p>
+</div>
+<p>Now click on the “Network security group” link. Click on the only security group in the resulting page. From here, we can make a new “Inbound security rule”.</p>
+<div class="figure">
+<img src="/images/2016-04-02-NetworkSecurity.png" alt="VM Creation Screen #6" />
+<p class="caption">VM Creation Screen #6</p>
+</div>
+<p>Click the “Add” button to add a new “Inbound Security rule”.</p>
+<div class="figure">
+<img src="/images/2016-04-02-FirewallRule.png" alt="VM Creation Screen #7" />
+<p class="caption">VM Creation Screen #7</p>
+</div>
+<p>We will first need to provide a name for this security rule. Call it “RStudio”. We can leave the “Priority” field alone. Change the “Destination port range” to 8787. This is the default port that R Studio server runs on.</p>
+<div class="figure">
+<img src="/images/2016-04-02-AddPortException.png" alt="VM Creation Screen #8" />
+<p class="caption">VM Creation Screen #8</p>
+</div>
+<p>Click “OK” to continue.</p>
+<h2 id="install-r">Install R</h2>
+<p>We will now begin installing R and R Studio Server on the VM. Begin by logging into the VM via SSH. You can find the public IP of the VM in the dashboard:</p>
+<div class="figure">
+<img src="/images/2016-04-02-IPAddress.png" alt="VM Information" />
+<p class="caption">VM Information</p>
+</div>
+<p>If you are using Windows, you can use <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html">PuTTY</a> to SSH into the VM. For Mac OS X or Linux, you can use one of the built in terminal emulators.</p>
+<p>In your command-line terminal, SSH into the VM:</p>
+<pre><code>ssh rstudioserver@&lt;&lt;YOUR VM IP ADDRESS&gt;&gt;</code></pre>
+<p>Once logged in, we will first install R. There are a few different options for installing R. We can use the version that is found in the default Ubuntu repositories. However, these normally contain an out-of-date version of R. We will opt into using the latest version of R.</p>
+<p>The following command will add the repository that will contain the latest version of R:</p>
+<pre><code>$ sudo sh -c &#39;echo &quot;deb http://cran.rstudio.com/bin/linux/ubuntu trusty/&quot; &gt;&gt;
+/etc/apt/sources.list&#39;</code></pre>
+<p>The following 2 commands are optional, but they will remove annoying warning messages you will receive from the package manager after adding the previous repository. The first command will download the associated GPG key.</p>
+<pre><code>$ gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9</code></pre>
+<p>The second command will add the key to the apt sources keyring:</p>
+<pre><code>$ gpg -a --export E084DAB9 | sudo apt-key add -</code></pre>
+<p>Next we will need to refresh the package lists using the following command:</p>
+<pre><code>$ sudo apt-get update</code></pre>
+<p>We can now install the latest version of R:</p>
+<pre><code>$ sudo apt-get install r-base</code></pre>
+<h2 id="install-r-studio-server">Install R Studio Server</h2>
+<p>We can begin installing R Studio Server. We will first need to install a package called ‘gdebi’. This package allows us to install DEB files and to automatically resolve and dependencies for said DEB files. To install ‘gdebi’, enter the following command:</p>
+<pre><code>$ sudo apt-get install gdebi-core</code></pre>
+<p>Now, download the DEB file for R Studio Server:</p>
+<pre><code>$ wget https://download2.rstudio.org/rstudio-server-0.99.893-amd64.deb  </code></pre>
+<p>To install the DEB file, enter the following command:</p>
+<pre><code>$ sudo gdebi rstudio-server-0.99.893-amd64.deb</code></pre>
+<p>R Studio Server should now be successfully installed! We can now verify the installation using this command:</p>
+<pre><code>$ sudo rstudio-server verify-installation</code></pre>
+<p>If everything went well, you shouldn’t see any scary error messages.</p>
+<p>Finally, we will create a new user account in order to access R Studio Server. In the command line, enter the following command:</p>
+<pre><code>$ sudo adduser rstudio</code></pre>
+<p>Enter a password and optionally fill out the rest of the information that you have been prompted for.</p>
+<h2 id="accessing-r-studio-server">Accessing R Studio Server</h2>
+<p>We can now access the server! In your web browser, enter:</p>
+<pre><code>http://yourVMipaddress:8787</code></pre>
+<p>You should hopefully see an R Studio login page:</p>
+<div class="figure">
+<img src="/images/2016-04-02-RLoginPage.png" alt="R Server Login Page" />
+<p class="caption">R Server Login Page</p>
+</div>
+<p>Enter the credentials of the user you recently created. You will be redirected to your new R Studio workspace that you can access anywhere! Enjoy!</p>
+<div class="figure">
+<img src="/images/2016-04-02-RSplashPage.png" alt="R Workspace" />
+<p class="caption">R Workspace</p>
+</div>
+<p>Cheers,</p>
+<p>Connor Moreside</p>
+<h2 id="resources">Resources</h2>
+<ol style="list-style-type: decimal">
+<li><a href="https://support.rstudio.com/hc/en-us/articles/200552316-Configuring-the-Server">Configuring R Server</a></li>
+<li><a href="https://azure.microsoft.com/en-us/pricing/calculator/">Azure Pricing Calculator</a></li>
+</ol>]]></description>
+    <pubDate>Sat, 02 Apr 2016 00:00:00 UT</pubDate>
+    <guid>http://moresi.de/posts/2016-04-02-setting-up-r-studio-server-on-microsoft-azure.html</guid>
+    <dc:creator>Connor Moreside</dc:creator>
+</item>
+
+    </channel>
+</rss>
