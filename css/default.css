@@ -1,56 +1,104 @@
-body {
-    color: black;
+html, button, input, select, textarea, .pure-g[class *="pure-u"] {
+    font-family: 'PT Sans', sans-serif;
     font-size: 16px;
-    margin: 0px auto 0px auto;
-    width: 600px;
-}
-
-div#header {
-    border-bottom: 2px solid black;
-    margin-bottom: 30px;
-    padding: 12px 0px 12px 0px;
-}
-
-div#logo a {
-    color: black;
-    float: left;
-    font-size: 18px;
-    font-weight: bold;
-    text-decoration: none;
-}
-
-div#header #navigation {
-    text-align: right;
-}
-
-div#header #navigation a {
-    color: black;
-    font-size: 18px;
-    font-weight: bold;
-    margin-left: 12px;
-    text-decoration: none;
-    text-transform: uppercase;
-}
-
-div#footer {
-    border-top: solid 2px black;
-    color: #555;
-    font-size: 12px;
-    margin-top: 30px;
-    padding: 12px 0px 12px 0px;
-    text-align: right;
 }
 
 h1 {
     font-size: 24px;
+    margin-bottom: 15px;
 }
 
 h2 {
-    font-size: 20px;
+    font-size: 18px;
 }
 
-div.info {
-    color: #555;
-    font-size: 14px;
+p {
+    padding-bottom: 20px;
+    max-width: 800px;
+    line-height: 2.25;
+}
+
+a {
+    text-decoration: underline;
+}
+
+a:visited {
+    color: black;
+}
+
+footer {
+    margin-top: 50px;
+    white-space: nowrap;
+    text-align: right;
+    padding-right: 50px;
+    padding-bottom: 50px;
+}
+
+nav {
+    font-size: 18px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+nav > ul {
+    list-style-type: none;
+    margin: 0;
+    padding-right: 50px;
+}
+
+nav > ul > li {
+    display: inline-block;
+    padding-left: 5px;
+}
+
+nav > ul > li a {
+    display: block;
+    color: black;
+    text-decoration: none;
+}
+
+nav > ul > li a:hover {
+    text-decoration: underline;
+}
+
+.img-link {
+    text-decoration: none;
+}
+
+.caption {
     font-style: italic;
+    font-size: 12px;
+    margin-top: -1px;
+}
+
+#container {
+    padding-top: 20px;
+}
+
+#body-container {
+    padding-top: 25px;
+}
+
+#header-bar {
+    height: 20px;
+    background-color: #6B6B6B;
+    box-shadow: 0 0.5px 3px 0 #000000;
+}
+
+#header-contents {
+    height: 100px;
+    display: flex;
+    align-items: center;
+}
+
+#header-text {
+    font-family: 'VT323', monospace;
+    font-size: 52px;
+}
+
+#avatar {
+    height: 80px;
+    width: 80px;
+    display: block;
+    margin: auto;
 }
