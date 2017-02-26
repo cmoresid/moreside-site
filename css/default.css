@@ -18,6 +18,14 @@ p {
     line-height: 2.25;
 }
 
+ul {
+    list-style-type: square;
+}
+
+li {
+    line-height: 2.25;
+}
+
 a {
     text-decoration: underline;
     color: black;
@@ -74,6 +82,10 @@ nav > ul > li a:hover {
     font-style: italic;
     font-size: 12px;
     margin-top: -1px;
+}
+
+.sourceCode {
+    padding-bottom: 20px;
 }
 
 #container {
