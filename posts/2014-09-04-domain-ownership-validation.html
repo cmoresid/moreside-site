@@ -1,121 +1,61 @@
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"
-    xmlns:dc="http://purl.org/dc/elements/1.1/">
-    <channel>
-        <title>A Developer's Musings - Posts tagged .NET</title>
-        <link>http://moresi.de</link>
-        <description><![CDATA[Personal blog for Connor Moreside]]></description>
-        <atom:link href="http://moresi.de/tags/.NET.xml" rel="self"
-                   type="application/rss+xml" />
-        <lastBuildDate>Sun, 26 Feb 2017 00:00:00 UT</lastBuildDate>
-        <item>
-    <title>Creating A Drag-n-Drop Enabled Text Box in WPF</title>
-    <link>http://moresi.de/posts/2017-02-26-drag-n-drop-text-field-wpf.html</link>
-    <description><![CDATA[<p>Recently, a WPF desktop application that I was working on required the user to select multiple files, which were typically in different directories. I had implemented a “Browse” button that would allow the user to select these files via a file selection dialog box . However, this becomes very tedious when you are constantly selecting these different files. I decided to implement drag-n-drop to make my users’ lives easier.</p>
-<p>There are a few different approaches that you can take. You can use a framework, such as the wonderful “GongSolutions.WPF.DragDrop” library. This library is great if you require more advanced drag-n-drop functionality. I was originally using this library to implement the functionality that I needed, but later realized it was overkill. I decided to go with a different approach. I decided to create a custom control that derived from the <code>TextBox</code> control.</p>
-<p>First, you will need to override the <code>OnApplyTemplate</code> method of the <code>TextBox</code> control. <code>OnApplyTemplate</code> is called just before the UI element is displayed in the application. This is a good place to wire the drag/drop related events:</p>
-<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">public</span> <span class="kw">override</span> <span class="dt">void</span> <span class="fu">OnApplyTemplate</span>()
-{
-    <span class="co">// Make sure to call the base.OnApplyTemplate() first!</span>
-    <span class="kw">base</span>.<span class="fu">OnApplyTemplate</span>();
+<!DOCTYPE html>
+<html lang="en">
 
-    DragEnter += FilePathTextBox_DragEnter;
-    Drop += FilePathTextBox_Drop;
-    PreviewDragOver += FilePathTextBox_PreviewDragOver;
-}</code></pre></div>
-<p>We will now start implementing the event handlers that we specified in the <code>OnApplyTemplate</code> method. Let’s start with the easy one first: <code>FilePathTextBox_PreviewDragOver</code>. This handler tells the control to show the user the little ‘+’ sign when he / she drags a file onto the text box:</p>
-<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">private</span> <span class="dt">void</span> <span class="fu">FilePathTextBox_PreviewDragOver</span>(<span class="dt">object</span> sender, DragEventArgs e)
-{
-    e.<span class="fu">Handled</span> = <span class="kw">true</span>;
-}</code></pre></div>
-<p>Now, let’s write the event handler that handles the event when the user drags a file on to the custom text box:</p>
-<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">private</span> <span class="dt">void</span> <span class="fu">FilePathTextBox_DragEnter</span>(<span class="dt">object</span> sender, DragEventArgs e)
-{
-    var dragFileList = ((DataObject)e.<span class="fu">Data</span>).<span class="fu">GetFileDropList</span>().<span class="fu">Cast</span>&lt;<span class="dt">string</span>&gt;().<span class="fu">ToList</span>();
-    <span class="dt">var</span> draggingOnlyOneFile = dragFileList.<span class="fu">Count</span> == <span class="dv">1</span> &amp;&amp; dragFileList.<span class="fu">All</span>(item =&gt;
-    {
-        <span class="dt">var</span> attributes = File.<span class="fu">GetAttributes</span>(item);
-        <span class="kw">return</span> (attributes &amp; FileAttributes.<span class="fu">Directory</span>) != FileAttributes.<span class="fu">Directory</span>;
-    });
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width" />
 
-    e.<span class="fu">Effects</span> = draggingOnlyOneFile ? DragDropEffects.<span class="fu">Copy</span> : DragDropEffects.<span class="fu">None</span>;
-}</code></pre></div>
-<p>The <code>FilePathTextBox_DragEnter</code> event handler gets a list of files that the user dragged on to the text box. In the code above, we want the user to only be able to drag 1 file (not directory) on to the text box. This filtering can be tailored to your needs. This is left as an exercise to the reader.</p>
-<p>Here is the last event that we need to implement:</p>
-<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">private</span> <span class="dt">void</span> <span class="fu">FilePathTextBox_Drop</span>(<span class="dt">object</span> sender, DragEventArgs e)
-{
-    var dragFileList = ((DataObject)e.<span class="fu">Data</span>).<span class="fu">GetFileDropList</span>().<span class="fu">Cast</span>&lt;<span class="dt">string</span>&gt;().<span class="fu">ToList</span>();
-    <span class="dt">var</span> draggingOnlyOneFile = dragFileList.<span class="fu">Count</span> == <span class="dv">1</span> &amp;&amp; dragFileList.<span class="fu">All</span>(item =&gt;
-    {
-        <span class="dt">var</span> attributes = File.<span class="fu">GetAttributes</span>(item);
-        <span class="kw">return</span> (attributes &amp; FileAttributes.<span class="fu">Directory</span>) != FileAttributes.<span class="fu">Directory</span>;
-    });
-
-    e.<span class="fu">Effects</span> = draggingOnlyOneFile ? DragDropEffects.<span class="fu">Copy</span> : DragDropEffects.<span class="fu">None</span>;
-
-    <span class="co">// Set the Text property of the custom text box to the path of</span>
-    <span class="co">// the file the user dropped.</span>
-    <span class="kw">if</span> (draggingOnlyOneFile)
-        Text = dragFileList[<span class="dv">0</span>];
-}</code></pre></div>
-<p>Here is the final, refactored implementation:</p>
-<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">public</span> <span class="kw">class</span> FilePathTextBox : TextBox
-{
-    <span class="kw">public</span> <span class="kw">override</span> <span class="dt">void</span> <span class="fu">OnApplyTemplate</span>()
-    {
-        <span class="kw">base</span>.<span class="fu">OnApplyTemplate</span>();
-        DragEnter += FilePathTextBox_DragEnter;
-        Drop += FilePathTextBox_Drop;
-        PreviewDragOver += FilePathTextBox_PreviewDragOver;
-    }
-
-    <span class="kw">private</span> <span class="dt">void</span> <span class="fu">FilePathTextBox_PreviewDragOver</span>(<span class="dt">object</span> sender, DragEventArgs e)
-    {
-        e.<span class="fu">Handled</span> = <span class="kw">true</span>;
-    }
-
-    <span class="kw">private</span> <span class="dt">void</span> <span class="fu">FilePathTextBox_DragEnter</span>(<span class="dt">object</span> sender, DragEventArgs e)
-    {
-        <span class="dt">var</span> didUserOnlyDragOneFile = <span class="fu">DidUserDragOnlyOneFile</span>(e);
-        <span class="fu">SetDragDropEffect</span>(didUserOnlyDragOneFile, e);
-    }
-
-    <span class="kw">private</span> <span class="dt">void</span> <span class="fu">FilePathTextBox_Drop</span>(<span class="dt">object</span> sender, DragEventArgs e)
-    {
-        <span class="dt">var</span> didUserOnlyDragOneFile = <span class="fu">DidUserDragOnlyOneFile</span>(e);
-        <span class="fu">SetDragDropEffect</span>(didUserOnlyDragOneFile, e);
-
-        <span class="kw">if</span> (draggingOnlyOneFile)
-            Text = dragFileList[<span class="dv">0</span>];
-    }
-
-    <span class="kw">private</span> <span class="dt">bool</span> <span class="fu">DidUserDragOnlyOneFile</span>(DragEventArgs e)
-    {
-        var dragFileList = ((DataObject)e.<span class="fu">Data</span>).<span class="fu">GetFileDropList</span>().<span class="fu">Cast</span>&lt;<span class="dt">string</span>&gt;().<span class="fu">ToList</span>();
-        <span class="dt">var</span> draggingOnlyOneFile = dragFileList.<span class="fu">Count</span> == <span class="dv">1</span> &amp;&amp; dragFileList.<span class="fu">All</span>(item =&gt;
-        {
-            <span class="dt">var</span> attributes = File.<span class="fu">GetAttributes</span>(item);
-            <span class="kw">return</span> (attributes &amp; FileAttributes.<span class="fu">Directory</span>) != FileAttributes.<span class="fu">Directory</span>;
-        });
-
-        <span class="kw">return</span> draggingOnlyOneFile;
-    }
-
-    <span class="kw">private</span> <span class="dt">void</span> <span class="fu">SetDragDropEffect</span>(<span class="dt">bool</span> shouldShowCopyEffect, DragEventArgs e)
-    {
-        e.<span class="fu">Effects</span> = shouldShowCopyEffect ? DragDropEffects.<span class="fu">Copy</span> : DragDropEffects.<span class="fu">None</span>;
-    }
-}</code></pre></div>
-<p>Cheers,</p>
-<p>Connor Moreside</p>]]></description>
-    <pubDate>Sun, 26 Feb 2017 00:00:00 UT</pubDate>
-    <guid>http://moresi.de/posts/2017-02-26-drag-n-drop-text-field-wpf.html</guid>
-    <dc:creator>Connor Moreside</dc:creator>
-</item>
-<item>
     <title>Domain Ownership Validation</title>
-    <link>http://moresi.de/posts/2014-09-04-domain-ownership-validation.html</link>
-    <description><![CDATA[<p>At my current position, I was tasked with creating a component which would determine whether or not an individual owned or at the very least had administrative rights to a domain name; that is, to perform domain ownership validation. Why would one want to perform domain ownership validation? If one was providing a service which would send emails on behalf of a company with the domain name in question, for example, you would want to verify that whomever had signed up for the service with the domain name actually had the authority to do so.</p>
+    <link rel="stylesheet" href="https://unpkg.com/purecss@0.6.2/build/base-min.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@0.6.2/build/grids-min.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@0.6.2/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans|VT323">
+    <link rel="stylesheet" href="../css/default.css">
+    <link rel="stylesheet" href="../css/default.device.css">
+    <link rel="stylesheet" href="../css/syntax.css">
+
+    <link rel="alternate" type="application/rss+xml" title="Connor Moreside - A Personal Blog" href="http://moresi.de/rss.xml" />
+
+    <meta name="keywords" content="Connor Moreside,blog,programming,coding,haskell,personal,homepage,C#,.NET,python,software development" />
+    <meta name="description" content="Personal home page and blog of Connor Moreside." />
+</head>
+
+<body>
+    <div id="header-bar"></div>
+    <div id="container">
+        <header>
+            <div id="header-contents" class="pure-g">
+                <div class="pure-u-1 pure-u-md-3-24">
+                    <a href="../">
+                        <img id="avatar" src="../images/avatar.png" alt="avatar" />
+                    </a>
+                </div>
+                <div id="header-text" class="pure-u-1 pure-u-md-13-24">
+                    Musings Of A Developer
+                </div>
+                <nav class="pure-u-1 pure-u-md-8-24">
+                    <ul>
+                        <li><a href="../">Home</a></li>
+                        <li>|</li>
+                        <li><a href="../posts.html">Posts</a></li>
+                        <li>|</li>
+                        <li><a href="../projects.html">Projects</a></li>
+                        <li>|</li>
+                        <li><a href="../cv.html">CV</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+        <div id="body-container" class="pure-g">
+            <div class="pure-u-1 pure-u-md-3-24"></div>
+            <div class="pure-u-1 pure-u-md-13-24">
+                <h1>Domain Ownership Validation</h1>
+
+                <div class="info">
+    Posted on September  4, 2014 
+</div>
+
+<p>At my current position, I was tasked with creating a component which would determine whether or not an individual owned or at the very least had administrative rights to a domain name; that is, to perform domain ownership validation. Why would one want to perform domain ownership validation? If one was providing a service which would send emails on behalf of a company with the domain name in question, for example, you would want to verify that whomever had signed up for the service with the domain name actually had the authority to do so.</p>
 <p>At first glance, the most simple way would be to send an email to the individual who is listed as the administrator contact in the WHOIS database. However, there are a few different issues which become glaringly apparent once you perform a couple WHOIS lookups on a few different domains.</p>
 <p>Many individuals opt for WHOIS Privacy Protection which is a service that many domain name registers provide that generally replaces all the publicly visible contact details with alternate contact information so that when a WHOIS query is performed on the domain, an alternate mailing address, email address and phone number are displayed. The alternative email address should forward any messages to the actual email address the registerer used. However, in my experience, this has been spotty at best. To complicate things further, some domain authorities no longer post registration details of individuals associated with particular domains, such as .ca domains.</p>
 <p>So… scratch the WHOIS lookup method…</p>
@@ -241,7 +181,7 @@
         <span class="kw">foreach</span> (<span class="dt">string</span> txtRecord <span class="kw">in</span> txtRecords)
         {
             <span class="kw">if</span> (txtRecord.<span class="fu">StartsWith</span>(<span class="st">&quot;domain-verification&quot;</span>))
-                <span class="kw">return</span> txtRecord.<span class="fu">Split</span>(&#39;=&#39;)[<span class="dv">1</span>];
+                <span class="kw">return</span> txtRecord.<span class="fu">Split</span>('=')[<span class="dv">1</span>];
         }
  
         <span class="kw">return</span> txtValidationToken;
@@ -249,11 +189,58 @@
 }</code></pre></div>
 <p>Thanks for reading and hopefully this will be helpful if you need to do any sort of domain ownership validation on your systems!</p>
 <p>Cheers,</p>
-<p>Connor Moreside</p>]]></description>
-    <pubDate>Thu, 04 Sep 2014 00:00:00 UT</pubDate>
-    <guid>http://moresi.de/posts/2014-09-04-domain-ownership-validation.html</guid>
-    <dc:creator>Connor Moreside</dc:creator>
-</item>
+<p>Connor Moreside</p>
 
-    </channel>
-</rss>
+<div id="comments">
+    <h1>Comments</h1>
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_identifier = '/posts/2014-09-04-domain-ownership-validation.html';
+        var disqus_url = 'http://moresi.de' + '/posts/2014-09-04-domain-ownership-validation.html';
+        var disqus_title = 'Domain Ownership Validation';
+        (function () {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = 'http://moreside.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+
+    </script>
+    <noscript>
+        <p>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript=moreside">comments powered by Disqus.</a></p>
+    </noscript>
+</div>
+            </div>
+            <div class="pure-u-1 pure-u-md-8-24"></div>
+        </div>
+        <footer>
+            <div class="pure-g">
+                <div class="pure-u-1 pure-u-md-3-24"></div>
+                <div class="pure-u-1 pure-u-md-13-24">
+                </div>
+                <div id="profile-container" class="pure-u-1 pure-u-md-8-24">
+                    <a class="img-link" href="https://www.linkedin.com/in/cmoreside">
+                        <img src="../images/linkedin.png" alt="LinkedIn Profile" />
+                    </a>
+                    <a class="img-link" href="https://github.com/cmoresid">
+                        <img src="../images/github.png" alt="GitHub Profile" />
+                    </a>
+                    <a class="img-link" href="https://twitter.com/c_moreside">
+                        <img src="../images/twitter.png" alt="Twitter Profile" />
+                    </a>
+                    <a class="img-link" href="../rss.xml">
+                        <img src="../images/rss.png" alt="RSS Feed" />
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-92654324-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+</body>
+</html>

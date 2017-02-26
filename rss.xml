@@ -250,6 +250,148 @@
     <guid>http://moresi.de/posts/2016-04-02-setting-up-r-studio-server-on-microsoft-azure.html</guid>
     <dc:creator>Connor Moreside</dc:creator>
 </item>
+<item>
+    <title>Domain Ownership Validation</title>
+    <link>http://moresi.de/posts/2014-09-04-domain-ownership-validation.html</link>
+    <description><![CDATA[<p>At my current position, I was tasked with creating a component which would determine whether or not an individual owned or at the very least had administrative rights to a domain name; that is, to perform domain ownership validation. Why would one want to perform domain ownership validation? If one was providing a service which would send emails on behalf of a company with the domain name in question, for example, you would want to verify that whomever had signed up for the service with the domain name actually had the authority to do so.</p>
+<p>At first glance, the most simple way would be to send an email to the individual who is listed as the administrator contact in the WHOIS database. However, there are a few different issues which become glaringly apparent once you perform a couple WHOIS lookups on a few different domains.</p>
+<p>Many individuals opt for WHOIS Privacy Protection which is a service that many domain name registers provide that generally replaces all the publicly visible contact details with alternate contact information so that when a WHOIS query is performed on the domain, an alternate mailing address, email address and phone number are displayed. The alternative email address should forward any messages to the actual email address the registerer used. However, in my experience, this has been spotty at best. To complicate things further, some domain authorities no longer post registration details of individuals associated with particular domains, such as .ca domains.</p>
+<p>So… scratch the WHOIS lookup method…</p>
+<p>Another approach one could take is to have the individual upload a HTML document containing a unique token associated with the individual’s domain to his/her web server. After the document is uploaded, our system could then check to see if that document exists and whether or not the token inside the document matches the one in our system. Great! This sounds easy enough to do. One problem though: what if the user does not have a web server associated with that domain? Crap… moving on…</p>
+<p>I weighed the pros and cons of a couple other methods, but I finally settled on a method which involved an individual adding a TXT DNS record to his/her domain name server. Here is a brief overview of the approach:</p>
+<ol style="list-style-type: decimal">
+<li>When an individual asks to register a domain on our system, we will generate a unique token that is associated with the domain name registration request. We then need to store this validation token somewhere for future use (probably in a database).<br />
+</li>
+<li>The individual must place this unique token in a TXT record that is associated with this domain.<br />
+</li>
+<li>Once the TXT record has been created, the user will be able to click a ‘Verify Domain’ button in our system.<br />
+</li>
+<li>Our system will then proceed to retrieve all TXT records associated with the domain. The system will then try to find the record that the customer inserted.<br />
+</li>
+<li>If the record is found and the validation token matches the one we have in our system, the domain is verified!</li>
+</ol>
+<p>This approach works rather nicely; however, it is a little technical for the average user. Most people wouldn’t know how to add a DNS record (let alone even know what a DNS record is!) to their domain name server. One could help mitigate this complexity by preparing an email template containing the relevant information that a user could copy/paste into an email and send to their DNS provider.</p>
+<p>Here is some sample code for generating a unique validation token:</p>
+<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">public</span> <span class="kw">class</span> DomainValidationTokenUtil {
+    <span class="kw">public</span> <span class="kw">static</span> <span class="kw">readonly</span> <span class="dt">int</span> TOKEN_LENGTH = <span class="dv">50</span>;        
+ 
+    <span class="kw">public</span> <span class="kw">static</span> <span class="dt">string</span> <span class="fu">GenerateToken</span>()
+    {
+        <span class="dt">char</span>[] universeOfDiscourse = <span class="st">&quot;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890&quot;</span>.<span class="fu">ToCharArray</span>();
+            
+        RNGCryptoServiceProvider crypto = <span class="kw">new</span> <span class="fu">RNGCryptoServiceProvider</span>();
+        <span class="dt">byte</span>[] data = <span class="kw">new</span> <span class="dt">byte</span>[TOKEN_LENGTH];
+        crypto.<span class="fu">GetNonZeroBytes</span>(data);
+ 
+        StringBuilder result = <span class="kw">new</span> <span class="fu">StringBuilder</span>(TOKEN_LENGTH);
+        <span class="kw">foreach</span> (<span class="dt">byte</span> b <span class="kw">in</span> data)
+        {
+            result.<span class="fu">Append</span>(universeOfDiscourse[b % (universeOfDiscourse.<span class="fu">Length</span> - <span class="dv">1</span>)]);
+        }
+            
+        <span class="kw">return</span> result.<span class="fu">ToString</span>();
+    }
+}</code></pre></div>
+<p>As far as I know, the .NET framework does not have a built-in mechanism for nicely retrieving DNS records, so instead of writing our own, let us use a 3rd party library such as <a href="http://arsofttoolsnet.codeplex.com/">ARSoft.Tools.NET</a> or one found on <a href="http://www.codeproject.com/Articles/23673/DNS-NET-Resolver-C">CodeProject</a>. Personally, I used the library on CodeProject. Here is some sample code for retrieving the DNS records, parsing the records, and performing the validation:</p>
+<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">public</span> <span class="kw">interface</span> IDNSProvider {
+    IList&lt;<span class="dt">string</span>&gt; <span class="fu">GetTXTRecords</span>(<span class="dt">string</span> domainName);
+}</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">using</span> Heijden.<span class="fu">DNS</span>;
+ 
+<span class="kw">public</span> <span class="kw">class</span> DNSProvider : IDNSProvider
+{
+    <span class="kw">private</span> <span class="kw">readonly</span> Resolver _resolver;
+ 
+    <span class="kw">public</span> <span class="fu">DNSProvider</span>()
+    {
+        _resolver = <span class="kw">new</span> <span class="fu">Resolver</span>();
+        _resolver.<span class="fu">Recursion</span> = <span class="kw">true</span>;
+        _resolver.<span class="fu">UseCache</span> = <span class="kw">true</span>;
+        _resolver.<span class="fu">DnsServer</span> = <span class="st">&quot;8.8.8.8&quot;</span>; <span class="co">// Google Public DNS</span>
+ 
+        _resolver.<span class="fu">TimeOut</span> = <span class="dv">1000</span>;
+        _resolver.<span class="fu">Retries</span> = <span class="dv">3</span>;
+        _resolver.<span class="fu">TransportType</span> = TransportType.<span class="fu">Udp</span>;
+    }
+ 
+    <span class="kw">public</span> IList&lt;<span class="dt">string</span>&gt; <span class="fu">GetTXTRecords</span>(<span class="dt">string</span> domainName)
+    {
+        IList&lt;<span class="dt">string</span>&gt; records = <span class="kw">new</span> List&lt;<span class="dt">string</span>&gt;();
+        <span class="dt">const</span> QType qType = QType.<span class="fu">TXT</span>;
+        <span class="dt">const</span> QClass qClass = QClass.<span class="fu">IN</span>;
+ 
+        Response response = _resolver.<span class="fu">Query</span>(domainName, qType, qClass);
+ 
+        <span class="kw">foreach</span> (RecordTXT record <span class="kw">in</span> response.<span class="fu">RecordsTXT</span>)
+        {
+            records.<span class="fu">Add</span>(record.<span class="fu">ToString</span>());
+        }
+ 
+        <span class="kw">return</span> records;
+    }
+}</code></pre></div>
+<p>And here is how you could perform the validation:</p>
+<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">public</span> <span class="kw">class</span> DomainValidationService
+{
+    <span class="kw">private</span> IDNSProvider _dnsProvider;
+ 
+    <span class="kw">public</span> <span class="fu">DomainValidationService</span>(IDNSProvider dnsProvider)
+    {
+        _dnsProvider = dnsProvider;
+    }
+ 
+    <span class="kw">public</span> <span class="dt">bool</span> <span class="fu">ValidateDomainOwnership</span>(<span class="dt">string</span> domainName, <span class="dt">string</span> validationToken)
+    {
+        <span class="co">// Retrieve TXT records</span>
+        IList&lt;<span class="dt">string</span>&gt; txtRecords = _dnsProvider.<span class="fu">GetTXTRecords</span>(domainName);
+ 
+        <span class="co">// If there are no TXT records, the site is not verified yet.</span>
+        <span class="kw">if</span> (txtRecords.<span class="fu">Count</span> == <span class="dv">0</span>)
+            <span class="kw">return</span> <span class="kw">false</span>;
+ 
+        <span class="co">// Check to see if validation token exists in any of the TXT records found</span>
+        <span class="co">// and return the validation token if found.</span>
+        <span class="dt">string</span> validationTokenInTXTRecord = <span class="fu">FindValidationTokenInTXTRecords</span>(txtRecords, validationToken);
+ 
+        <span class="co">// No TXT record found containing a validation token.</span>
+        <span class="kw">if</span> (validationTokenInTXTRecord == <span class="kw">null</span>)
+            <span class="kw">return</span> <span class="kw">false</span>;
+ 
+        <span class="kw">if</span> (validationTokenInTXTRecord.<span class="fu">Length</span> != <span class="dv">50</span>)
+            <span class="kw">throw</span> <span class="kw">new</span> <span class="fu">Exception</span>(<span class="st">&quot;Invalid validation token in TXT record.&quot;</span>);
+ 
+        <span class="kw">if</span> (!validationTokenInTXTRecord.<span class="fu">Equals</span>(validationToken))
+            <span class="kw">throw</span> <span class="kw">new</span> <span class="fu">Exception</span>(<span class="st">&quot;Validation token in database does not match token in TXT record.&quot;</span>);
+ 
+        <span class="co">// Everything must be OK, domain has been validated!</span>
+        <span class="kw">return</span> <span class="kw">true</span>;
+    }
+ 
+    <span class="kw">public</span> <span class="dt">string</span> <span class="fu">GenerateTXTRecordValue</span>()
+    {
+        <span class="kw">return</span> <span class="dt">string</span>.<span class="fu">Format</span>(<span class="st">&quot;domain-verification={0}&quot;</span>, DomainVerificationTokenUtil.<span class="fu">GenerateToken</span>());
+    }
+ 
+    <span class="kw">private</span> <span class="dt">string</span> <span class="fu">FindValidationTokenInTXTRecords</span>(IList&lt;<span class="dt">string</span>&gt; txtRecords, <span class="dt">string</span> validationToken)
+    {
+        <span class="dt">string</span> txtValidationToken = <span class="kw">null</span>;
+ 
+        <span class="kw">foreach</span> (<span class="dt">string</span> txtRecord <span class="kw">in</span> txtRecords)
+        {
+            <span class="kw">if</span> (txtRecord.<span class="fu">StartsWith</span>(<span class="st">&quot;domain-verification&quot;</span>))
+                <span class="kw">return</span> txtRecord.<span class="fu">Split</span>(&#39;=&#39;)[<span class="dv">1</span>];
+        }
+ 
+        <span class="kw">return</span> txtValidationToken;
+    }
+}</code></pre></div>
+<p>Thanks for reading and hopefully this will be helpful if you need to do any sort of domain ownership validation on your systems!</p>
+<p>Cheers,</p>
+<p>Connor Moreside</p>]]></description>
+    <pubDate>Thu, 04 Sep 2014 00:00:00 UT</pubDate>
+    <guid>http://moresi.de/posts/2014-09-04-domain-ownership-validation.html</guid>
+    <dc:creator>Connor Moreside</dc:creator>
+</item>
 
     </channel>
 </rss>
