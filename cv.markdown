@@ -1,9 +1,6 @@
 ---
-title: Connor Moreside
+title: Connor Moreside's CV
 ---
 
-<http://moresi.de/>
-<connor@moresi.de/>
-
-## Summary
+Coming soon
 

@@ -1,5 +1,5 @@
 ---
-title: Personal Projects
+title: Projects
 ---
 
 Here are a few of the open-source projects that I have worked on:
