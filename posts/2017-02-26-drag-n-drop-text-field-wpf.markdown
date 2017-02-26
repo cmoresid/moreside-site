@@ -94,7 +94,7 @@ private void FilePathTextBox_Drop(object sender, DragEventArgs e)
 Here is the final, refactored implementation:  
   
 ```cs
-pubic class FilePathTextBox : TextBox
+public class FilePathTextBox : TextBox
 {
     public override void OnApplyTemplate()
     {
