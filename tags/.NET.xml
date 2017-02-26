@@ -59,7 +59,7 @@
         Text = dragFileList[<span class="dv">0</span>];
 }</code></pre></div>
 <p>Here is the final, refactored implementation:</p>
-<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs">pubic <span class="kw">class</span> FilePathTextBox : TextBox
+<div class="sourceCode"><pre class="sourceCode cs"><code class="sourceCode cs"><span class="kw">public</span> <span class="kw">class</span> FilePathTextBox : TextBox
 {
     <span class="kw">public</span> <span class="kw">override</span> <span class="dt">void</span> <span class="fu">OnApplyTemplate</span>()
     {
