@@ -48,7 +48,7 @@ main = hakyll $ do
                         listField "posts" (postCtx tags) (return posts) <>
                         defaultContext
             makeItem ""
-                >>= loadAndApplyTemplate "templates/post-list.html" ctx
+                >>= loadAndApplyTemplate "templates/posts.html" ctx
                 >>= loadAndApplyTemplate "templates/default.html" ctx
                 >>= relativizeUrls
 
@@ -63,7 +63,7 @@ main = hakyll $ do
                         listField "posts" (postCtx tags) (return posts) <>
                         defaultContext
             makeItem ""
-                >>= loadAndApplyTemplate "templates/post-list.html" ctx
+                >>= loadAndApplyTemplate "templates/posts.html" ctx
                 >>= loadAndApplyTemplate "templates/default.html" ctx
                 >>= relativizeUrls
 
