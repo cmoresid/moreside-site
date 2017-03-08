@@ -17,10 +17,9 @@ Source Code: [GitHub](https://github.com/cmoresid/ebcdic-compare-tool)
 
 ## YEG Photos  
 
-YEG Photos is an application that presents geocoded photos of Edmonton, AB, Canada and displays
-them on an interactive map. The years in which the photos were taken span from 2013 all
-the way back to 1883! It is fascinating to see the evolution of Edmonton over time! YEG
-Photos helps you discover Edmonton's past in an incredibly visual way.
+Developed for the Open Data Hackathon 2016 in Edmonton, YEG Photos is an application that presents geo-tagged photos of Edmonton, AB, Canada and displays them on an interactive map. The years 
+in which the photos were taken span from 2016 all the way back to 1883! It is fascinating to see the evolution of Edmonton over time! YEG Photos helps you discover Edmonton's past in an incredibly 
+visual way.
 
 ![YEG Photos Screenshot](/images/projects-yeg-photos.png)
 
